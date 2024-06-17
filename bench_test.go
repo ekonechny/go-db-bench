@@ -9,14 +9,14 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	_ "github.com/lib/pq"
+
 	"go-db-bench/gorm"
 	sqlDB "go-db-bench/sql"
 	libpq "go-db-bench/sqlc/libpq"
 	sqlcPgx "go-db-bench/sqlc/pgx"
 	"go-db-bench/sqlx"
 	"go-db-bench/xo"
-
-	_ "github.com/lib/pq"
 )
 
 type Bencher interface {
@@ -30,11 +30,11 @@ func Benchmark(b *testing.B) {
 	dsn := os.Getenv("DATABASE_URL")
 	var benchmarks = []Bencher{
 		Must(sqlDB.New(dsn)),
-		Must(sqlx.New(dsn)),
-		Must(gorm.New(dsn)),
 		sqlcPgx.New(Must(pgx.Connect(context.Background(), dsn))),
 		libpq.New(Must(sql.Open("postgres", dsn))),
 		xo.New(Must(sql.Open("postgres", dsn))),
+		Must(sqlx.New(dsn)),
+		Must(gorm.New(dsn)),
 	}
 
 	for _, limit := range limits {
