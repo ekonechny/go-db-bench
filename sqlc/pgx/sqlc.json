@@ -1,0 +1,15 @@
+{
+  "version": "2",
+  "sql": [{
+    "schema": "schema.sql",
+    "queries": "queries.sql",
+    "engine": "postgresql",
+    "gen": {
+      "go": {
+        "out": ".",
+        "package": "pgx",
+        "sql_package": "pgx/v5"
+      }
+    }
+  }]
+}
