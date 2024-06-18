@@ -24,7 +24,7 @@ func (d *DB) Name() string {
 	return "sqlx/libpq"
 }
 
-func (d *DB) ListAuthors(limit int32) ([]Product, error) {
+func (d *DB) Products(limit int32) ([]Product, error) {
 	var books []Product
 	err := d.db.Select(&books, "SELECT * FROM products LIMIT $1", limit)
 	if err != nil {
@@ -36,7 +36,7 @@ func (d *DB) ListAuthors(limit int32) ([]Product, error) {
 func (d *DB) BenchmarkSelect(limit int32) func(b *testing.B) {
 	return func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
-			if _, err := d.ListAuthors(limit); err != nil {
+			if _, err := d.Products(limit); err != nil {
 				b.Fatal(err)
 			}
 		}
