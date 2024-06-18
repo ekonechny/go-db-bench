@@ -4,18 +4,23 @@ package xo
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/lib/pq"
 
 	"github.com/google/uuid"
 )
 
 // Product represents a row from 'public.products'.
 type Product struct {
-	ID          uuid.UUID     `json:"id"`          // id
-	Name        string        `json:"name"`        // name
-	Price       int64         `json:"price"`       // price
-	Description string        `json:"description"` // description
-	Weight      sql.NullInt64 `json:"weight"`      // weight
+	ID          uuid.UUID      `json:"id"`          // id
+	Name        string         `json:"name"`        // name
+	Description string         `json:"description"` // description
+	Categories  pq.StringArray `json:"categories"`  // categories
+	Price       float64        `json:"price"`       // price
+	Features    pq.StringArray `json:"features"`    // features
+	Color       string         `json:"color"`       // color
+	Material    string         `json:"material"`    // material
+	Upc         string         `json:"upc"`         // upc
 	// xo fields
 	_exists, _deleted bool
 }
@@ -41,13 +46,13 @@ func (p *Product) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (manual)
 	const sqlstr = `INSERT INTO public.products (` +
-		`id, name, price, description, weight` +
+		`id, name, description, categories, price, features, color, material, upc` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5` +
+		`$1, $2, $3, $4, $5, $6, $7, $8, $9` +
 		`)`
 	// run
-	logf(sqlstr, p.ID, p.Name, p.Price, p.Description, p.Weight)
-	if _, err := db.ExecContext(ctx, sqlstr, p.ID, p.Name, p.Price, p.Description, p.Weight); err != nil {
+	logf(sqlstr, p.ID, p.Name, p.Description, p.Categories, p.Price, p.Features, p.Color, p.Material, p.Upc)
+	if _, err := db.ExecContext(ctx, sqlstr, p.ID, p.Name, p.Description, p.Categories, p.Price, p.Features, p.Color, p.Material, p.Upc); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -65,11 +70,11 @@ func (p *Product) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.products SET ` +
-		`name = $1, price = $2, description = $3, weight = $4 ` +
-		`WHERE id = $5`
+		`name = $1, description = $2, categories = $3, price = $4, features = $5, color = $6, material = $7, upc = $8 ` +
+		`WHERE id = $9`
 	// run
-	logf(sqlstr, p.Name, p.Price, p.Description, p.Weight, p.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, p.Name, p.Price, p.Description, p.Weight, p.ID); err != nil {
+	logf(sqlstr, p.Name, p.Description, p.Categories, p.Price, p.Features, p.Color, p.Material, p.Upc, p.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, p.Name, p.Description, p.Categories, p.Price, p.Features, p.Color, p.Material, p.Upc, p.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -91,16 +96,16 @@ func (p *Product) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.products (` +
-		`id, name, price, description, weight` +
+		`id, name, description, categories, price, features, color, material, upc` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5` +
+		`$1, $2, $3, $4, $5, $6, $7, $8, $9` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`name = EXCLUDED.name, price = EXCLUDED.price, description = EXCLUDED.description, weight = EXCLUDED.weight `
+		`name = EXCLUDED.name, description = EXCLUDED.description, categories = EXCLUDED.categories, price = EXCLUDED.price, features = EXCLUDED.features, color = EXCLUDED.color, material = EXCLUDED.material, upc = EXCLUDED.upc `
 	// run
-	logf(sqlstr, p.ID, p.Name, p.Price, p.Description, p.Weight)
-	if _, err := db.ExecContext(ctx, sqlstr, p.ID, p.Name, p.Price, p.Description, p.Weight); err != nil {
+	logf(sqlstr, p.ID, p.Name, p.Description, p.Categories, p.Price, p.Features, p.Color, p.Material, p.Upc)
+	if _, err := db.ExecContext(ctx, sqlstr, p.ID, p.Name, p.Description, p.Categories, p.Price, p.Features, p.Color, p.Material, p.Upc); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -135,7 +140,7 @@ func (p *Product) Delete(ctx context.Context, db DB) error {
 func ProductByID(ctx context.Context, db DB, id uuid.UUID) (*Product, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, name, price, description, weight ` +
+		`id, name, description, categories, price, features, color, material, upc ` +
 		`FROM public.products ` +
 		`WHERE id = $1`
 	// run
@@ -143,7 +148,7 @@ func ProductByID(ctx context.Context, db DB, id uuid.UUID) (*Product, error) {
 	p := Product{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&p.ID, &p.Name, &p.Price, &p.Description, &p.Weight); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&p.ID, &p.Name, &p.Description, &p.Categories, &p.Price, &p.Features, &p.Color, &p.Material, &p.Upc); err != nil {
 		return nil, logerror(err)
 	}
 	return &p, nil

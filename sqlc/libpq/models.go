@@ -5,15 +5,17 @@
 package sqlc
 
 import (
-	"database/sql"
-
 	"github.com/google/uuid"
 )
 
 type Product struct {
 	ID          uuid.UUID
 	Name        string
-	Price       int64
 	Description string
-	Weight      sql.NullInt32
+	Categories  []string
+	Price       float64
+	Features    []string
+	Color       string
+	Material    string
+	Upc         string
 }

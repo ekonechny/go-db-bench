@@ -19,7 +19,9 @@ docker-compose-down:
 	@docker-compose -p db-bench down
 
 load-dump:
-	@psql postgres -U postgres -h localhos < dumpfile
+	@dropdb postgres -U postgres -h localhost
+	@createdb postgres -U postgres -h localhost
+	@psql postgres -U postgres -h localhost < dump.sql
 
-run:
-	go test -bench=.  -benchmem ./...
+run: load-dump
+	@go test -bench=. -benchtime=30x -benchmem ./...

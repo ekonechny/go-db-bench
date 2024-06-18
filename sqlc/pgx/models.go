@@ -11,7 +11,11 @@ import (
 type Product struct {
 	ID          pgtype.UUID
 	Name        string
-	Price       int64
 	Description string
-	Weight      pgtype.Int4
+	Categories  []string
+	Price       float64
+	Features    []string
+	Color       string
+	Material    string
+	Upc         string
 }

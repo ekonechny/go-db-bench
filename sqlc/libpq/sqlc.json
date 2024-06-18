@@ -7,7 +7,15 @@
     "gen": {
       "go": {
         "out": ".",
-        "package": "sqlc"
+        "package": "sqlc",
+        "overrides": [
+          {
+            "db_type":"products",
+            "go_type": {
+              "type":"Product"
+            }
+          }
+        ]
       }
     }
   }]

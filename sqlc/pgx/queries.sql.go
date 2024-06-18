@@ -9,8 +9,28 @@ import (
 	"context"
 )
 
+const clearProducts = `-- name: ClearProducts :exec
+TRUNCATE products
+`
+
+func (q *Queries) ClearProducts(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, clearProducts)
+	return err
+}
+
+type InsertParams struct {
+	Name        string
+	Description string
+	Categories  []string
+	Price       float64
+	Features    []string
+	Color       string
+	Material    string
+	Upc         string
+}
+
 const products = `-- name: Products :many
-SELECT id, name, price, description, weight FROM products LIMIT $1
+SELECT id, name, description, categories, price, features, color, material, upc FROM products LIMIT $1
 `
 
 func (q *Queries) Products(ctx context.Context, limit int32) ([]Product, error) {
@@ -25,9 +45,13 @@ func (q *Queries) Products(ctx context.Context, limit int32) ([]Product, error) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Price,
 			&i.Description,
-			&i.Weight,
+			&i.Categories,
+			&i.Price,
+			&i.Features,
+			&i.Color,
+			&i.Material,
+			&i.Upc,
 		); err != nil {
 			return nil, err
 		}

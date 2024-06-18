@@ -7,10 +7,33 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/lib/pq"
 )
 
+const clearProducts = `-- name: ClearProducts :exec
+TRUNCATE products
+`
+
+func (q *Queries) ClearProducts(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, clearProducts)
+	return err
+}
+
+const insert = `-- name: Insert :exec
+INSERT INTO products (
+    name, description, categories, price, features, color, material, upc
+) SELECT name, description, categories, price, features, color, material, upc FROM UNNEST($1::products[])
+`
+
+// sqlc not support copyIn -> https://github.com/sqlc-dev/sqlc/issues/3264
+func (q *Queries) Insert(ctx context.Context, products []Product) error {
+	_, err := q.db.ExecContext(ctx, insert, pq.Array(products))
+	return err
+}
+
 const products = `-- name: Products :many
-SELECT id, name, price, description, weight FROM products LIMIT $1
+SELECT id, name, description, categories, price, features, color, material, upc FROM products LIMIT $1
 `
 
 func (q *Queries) Products(ctx context.Context, limit int32) ([]Product, error) {
@@ -25,9 +48,13 @@ func (q *Queries) Products(ctx context.Context, limit int32) ([]Product, error) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Price,
 			&i.Description,
-			&i.Weight,
+			pq.Array(&i.Categories),
+			&i.Price,
+			pq.Array(&i.Features),
+			&i.Color,
+			&i.Material,
+			&i.Upc,
 		); err != nil {
 			return nil, err
 		}

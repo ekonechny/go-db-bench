@@ -5,16 +5,22 @@ package xo
 import (
 	"context"
 
+	"github.com/lib/pq"
+
 	"github.com/google/uuid"
 )
 
 // Products represents a row from 'public.products'.
 type Products struct {
-	ID          uuid.UUID `json:"id"`          // id
-	Name        string    `json:"name"`        // name
-	Price       int64     `json:"price"`       // price
-	Description string    `json:"description"` // description
-	Weight      int       `json:"weight"`      // weight
+	ID          uuid.UUID      `json:"id"`          // id
+	Name        string         `json:"name"`        // name
+	Description string         `json:"description"` // description
+	Categories  pq.StringArray `json:"categories"`  // categories
+	Price       float64        `json:"price"`       // price
+	Features    pq.StringArray `json:"features"`    // features
+	Color       string         `json:"color"`       // color
+	Material    string         `json:"material"`    // material
+	Upc         string         `json:"upc"`         // upc
 }
 
 // ProductsByLimit runs a custom query, returning results as [Products].
@@ -33,7 +39,7 @@ func ProductsByLimit(ctx context.Context, db DB, limit int) ([]*Products, error)
 	for rows.Next() {
 		var p Products
 		// scan
-		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Description, &p.Weight); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Categories, &p.Price, &p.Features, &p.Color, &p.Material, &p.Upc); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &p)
